@@ -1,0 +1,76 @@
+HELP.md
+target/
+# .mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+*.iws
+*.iml
+*.ipr
+.idea/
+out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# Docker: если кто-то запускает compose с локальным volume-биндингом
+/.docker/
+docker-compose.override.yml
+
+# Логи
+*.log
+logs/
+
+# Spring Boot
+spring-shell.log
+
+# Playwright
+src/test/resources/playwright/traces/
+test-results/
+playwright-report/
+
+# JavaFX
+/javafx/target/
+/run/
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# Локальные конфиги, которые не должны попасть в репо
+application-local.yml
+application-local.properties
+.env
+.env.*
+!.env.example
+
+# CI
+.github/workflows/*.log
