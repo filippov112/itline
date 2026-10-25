@@ -5,19 +5,25 @@ import com.example.itline.repo.RecordRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CyclicBarrier;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @SpringBootTest
 @Testcontainers
@@ -32,50 +38,88 @@ class LostUpdateReproductionTest {
         r.add("spring.datasource.url", pg::getJdbcUrl);
         r.add("spring.datasource.username", pg::getUsername);
         r.add("spring.datasource.password", pg::getPassword);
-        // Для теста пусть схема создаётся с нуля
         r.add("spring.jpa.hibernate.ddl-auto", () -> "create-drop");
     }
 
     @Autowired RecordRepository repo;
+    @Autowired TransactionTemplate tx;
 
     @Test
-    void twoThreadsReadThenWrite_lostUpdate() throws Exception {
+    void lostUpdate_withoutVersioning() throws Exception {
         Record initial = repo.save(new Record(false, "icon1", "Исходное", "desc"));
         Long id = initial.getId();
 
-        // Барьер на 2: оба потока прочитали — оба могут идти писать
         CyclicBarrier bothRead = new CyclicBarrier(2);
         ExecutorService pool = Executors.newFixedThreadPool(2);
+        List<Future<?>> futures = new ArrayList<>();
 
-        Runnable work = () -> {
-            try {
-                // --- Фаза 1: чтение ---
-                var r = repo.findById(id).orElseThrow();
-                String oldName = r.getName();       // запоминаем, что прочитали
+        for (int i = 0; i < 2; i++) {
+            futures.add(pool.submit(() -> tx.execute(status -> {
+                Record r = repo.findById(id).orElseThrow();
+                String old = r.getName();
+                try {
+                    bothRead.await(5, TimeUnit.SECONDS);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                r.setName(old + " + " + Thread.currentThread().getName());
+                return null;
+            })));
+        }
 
-                bothRead.await();                   // ждём, пока второй тоже прочитает
+        for (Future<?> f : futures) {
+            assertThatCode(f::get).doesNotThrowAnyException();
+        }
 
-                // --- Фаза 2: запись ---
-                // пишем на основе ТОГО ЖЕ объекта r, который прочитали.
-                r.setName(oldName + " + " + Thread.currentThread().getName());
-                repo.save(r);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
-
-        pool.submit(work);
-        pool.submit(work);
         pool.shutdown();
         pool.awaitTermination(5, TimeUnit.SECONDS);
 
-        var result = repo.findById(id).orElseThrow();
-
-        // Ключевая проверка: имя содержит только одно " + thread",
-        // а не оба — значит, одна запись затёрла другую.
+        Record result = repo.findById(id).orElseThrow();
         long plusCount = result.getName().chars().filter(c -> c == '+').count();
         assertThat(plusCount)
-            .as("Если оба обновления применились последовательно, было бы 2 '+'")
-            .isEqualTo(1);   // ровно одно обновление потеряно
+                .as("Без @Version одно обновление должно потеряться")
+                .isEqualTo(1);
+    }
+
+
+    @Test
+    void withVersioning_secondWriterConflicts() throws Exception {
+        Record initial = repo.save(new Record(false, "icon1", "Исходное", "desc"));
+        Long id = initial.getId();
+
+        CyclicBarrier bothRead = new CyclicBarrier(2);
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        List<Future<?>> futures = new ArrayList<>();
+
+        for (int i = 0; i < 2; i++) {
+            futures.add(pool.submit(() -> tx.execute(status -> {
+                Record r = repo.findById(id).orElseThrow();
+                String old = r.getName();
+                try { bothRead.await(5, TimeUnit.SECONDS); }
+                catch (Exception e) { throw new RuntimeException(e); }
+                r.setName(old + " + " + Thread.currentThread().getName());
+                return null;
+            })));
+        }
+
+        // Ровно один должен упасть с optimistic lock, второй — пройти
+        int conflicts = 0, successes = 0;
+        for (Future<?> f : futures) {
+            try { f.get(10, TimeUnit.SECONDS); successes++; }
+            catch (ExecutionException e) {
+                assertThat(e.getCause())
+                    .isInstanceOf(OptimisticLockingFailureException.class);
+                conflicts++;
+            }
+        }
+        assertThat(successes).isEqualTo(1);
+        assertThat(conflicts).isEqualTo(1);
+
+        // В БД — ровно одно обновление, второй не затёр
+        Record result = repo.findById(id).orElseThrow();
+        long plusCount = result.getName().chars().filter(c -> c == '+').count();
+        assertThat(plusCount).isEqualTo(1);
+        // И версия увеличилась ровно на 1 (0 -> 1), а не на 2
+        assertThat(result.getVersion()).isEqualTo(1L);
     }
 }
