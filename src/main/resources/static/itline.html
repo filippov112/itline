@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Itline — Тестовое задание</title>
+    <link rel="stylesheet" href="/css/itline.css">
+</head>
+<body>
+<main class="app">
+    <header class="toolbar">
+        <h1>Записи</h1>
+        <div class="toolbar__actions">
+            <button id="btn-delete" type="button" class="btn btn--danger" disabled>
+                Удалить
+            </button>
+            <button id="btn-add" type="button" class="btn btn--primary">
+                Добавить
+            </button>
+        </div>
+    </header>
+
+    <!-- Контейнер для глобальных сообщений об ошибках/конфликтах. -->
+    <div id="global-error" class="alert alert--error" role="alert" hidden></div>
+
+    <table class="records" aria-label="Список записей">
+        <thead>
+        <tr>
+            <th class="records__select" aria-label="Выбор строки"></th>
+            <th class="records__active">Активно</th>
+            <th class="records__icon">Иконка</th>
+            <th>Название</th>
+            <th>Описание</th>
+        </tr>
+        </thead>
+        <!-- tbody наполняется из JS; data-id на строках — ключ для
+             поиска записи в клиентской модели. -->
+        <tbody id="records-body"></tbody>
+    </table>
+
+    <!-- Пустое состояние: показываем, если записей нет -->
+    <p id="empty-state" class="empty" hidden>Пока нет ни одной записи.</p>
+</main>
+
+<!-- ================= Модалка "Добавить" ================= -->
+
+<dialog id="add-dialog" class="dialog">
+    <form id="add-form" class="dialog__form" method="dialog" novalidate>
+        <h2 class="dialog__title">Новая запись</h2>
+
+        <!-- Сообщение валидации: ТЗ требует не закрывать окно
+             и показывать сообщение при пустых полях. -->
+        <div id="add-error" class="alert alert--error" role="alert" hidden></div>
+
+        <label class="field field--checkbox">
+            <input id="add-active" type="checkbox" checked>
+            <span>Активно</span>
+        </label>
+
+        <label class="field">
+            <span>Иконка</span>
+            <!-- Три иконки лежат в static/icons; первая выбрана по умолчанию. -->
+            <select id="add-icon">
+                <option value="icon1" selected>Иконка 1</option>
+                <option value="icon2">Иконка 2</option>
+                <option value="icon3">Иконка 3</option>
+            </select>
+        </label>
+
+        <label class="field">
+            <span>Название</span>
+            <input id="add-name" type="text" autocomplete="off" maxlength="255">
+        </label>
+
+        <label class="field">
+            <span>Описание</span>
+            <textarea id="add-description" rows="3" maxlength="2000"></textarea>
+        </label>
+
+        <div class="dialog__actions">
+            <!-- type="button" — чтобы "Отмена" не сабмитила форму -->
+            <button id="add-cancel" type="button" class="btn">Отмена</button>
+            <!-- type="submit" — сабмит ловим в JS, валидируем, шлём POST -->
+            <button id="add-submit" type="submit" class="btn btn--primary">Создать</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- ================= Модалка подтверждения удаления ================= -->
+
+<dialog id="delete-dialog" class="dialog">
+    <form method="dialog" class="dialog__form">
+        <h2 class="dialog__title">Удаление</h2>
+        <!-- Текст подставляется из JS: "Вы точно хотите удалить {Название}?" -->
+        <p id="delete-text"></p>
+        <div id="delete-error" class="alert alert--error" role="alert" hidden></div>
+        <div class="dialog__actions">
+            <button id="delete-cancel" type="button" class="btn">Отмена</button>
+            <button id="delete-confirm" type="button" class="btn btn--danger">Удалить</button>
+        </div>
+    </form>
+</dialog>
+
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>

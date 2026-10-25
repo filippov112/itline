@@ -26,6 +26,7 @@ check() {
 echo "== health =="
 # Сервер жив | Ожидание: health → 200, тело {"status":"UP"}
 check "GET /actuator/health" 200 "$BASE/actuator/health"
+check "GET /itline" 200 "$BASE/itline"
 
 echo "== create =="
 # Создание (POST) — успех

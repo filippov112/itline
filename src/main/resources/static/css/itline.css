@@ -1,0 +1,76 @@
+:root {
+    --border: #d0d4da;
+    --muted: #6b7280;
+    --primary: #2563eb;
+    --danger: #dc2626;
+    --bg-error: #fde8e8;
+    --text-error: #991b1b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font: 14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    color: #111827;
+    background: #f9fafb;
+}
+
+.app { max-width: 1000px; margin: 24px auto; padding: 0 16px; }
+
+.toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+}
+.toolbar h1 { font-size: 20px; margin: 0; }
+.toolbar__actions { display: flex; gap: 8px; }
+
+.btn {
+    padding: 8px 14px; border: 1px solid var(--border); border-radius: 6px;
+    background: #fff; cursor: pointer; font: inherit;
+}
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn--primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn--danger  { background: var(--danger);  border-color: var(--danger);  color: #fff; }
+
+.records {
+    width: 100%; border-collapse: collapse; background: #fff;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+}
+.records th, .records td {
+    padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+}
+.records tr:last-child td { border-bottom: none; }
+.records tr.is-selected { background: #eff6ff; }
+.records__select { width: 40px; }
+.records__active { width: 80px; }
+.records__icon   { width: 56px; }
+.records__icon img { width: 32px; height: 32px; display: block; }
+.records__name { font-weight: 600; }
+.records__desc { color: var(--muted); }
+
+.empty { color: var(--muted); text-align: center; padding: 24px; }
+
+.alert {
+    padding: 10px 12px; border-radius: 6px; margin: 0 0 12px;
+}
+.alert--error { background: var(--bg-error); color: var(--text-error); }
+
+
+.dialog {
+    border: none; border-radius: 10px; padding: 0;
+    width: min(480px, calc(100vw - 32px));
+}
+.dialog::backdrop { background: rgba(0,0,0,.35); }
+.dialog__form { padding: 20px; display: grid; gap: 12px; }
+.dialog__title { margin: 0; font-size: 18px; }
+.dialog__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+
+.field { display: grid; gap: 4px; }
+.field input, .field select, .field textarea {
+    padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font: inherit; width: 100%;
+}
+.field--checkbox { display: flex; align-items: center; gap: 8px; }
+.field--checkbox input { width: auto; }
