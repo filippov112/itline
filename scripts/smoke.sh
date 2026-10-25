@@ -46,8 +46,8 @@ ID=$(curl -s "$API" | jq -r '.[-1].id' 2>/dev/null || echo "")
 if [ -n "$ID" ] && [ "$ID" != "null" ]; then
     check "GET by id"         200 "$API/$ID"
     check "PUT by id"         200 -X PUT "$API/$ID" -H "Content-Type: application/json" \
-        -d '{"active":false,"icon":"icon2","name":"Smoke 1 upd","description":"d2"}'
-    check "DELETE by id"      204 -X DELETE "$API/$ID"
+        -d '{"active":false,"icon":"icon2","name":"Smoke 1 upd","description":"d2","version":0}'
+    check "DELETE by id"      204 -X DELETE "$API/$ID?version=1"
     check "GET deleted -> 404" 404 "$API/$ID"
 else
     echo "SKIP  read/update/delete: jq не установлен или список пуст"
@@ -56,8 +56,8 @@ fi
 echo "== not found =="
 check "GET unknown"           404 "$API/999999"
 check "PUT unknown"           404 -X PUT "$API/999999" -H "Content-Type: application/json" \
-    -d '{"active":true,"icon":"icon1","name":"x","description":"d"}'
-check "DELETE unknown"        404 -X DELETE "$API/999999"
+    -d '{"active":true,"icon":"icon1","name":"x","description":"d", "version":0}'
+check "DELETE unknown"        404 -X DELETE "$API/999999?version=0"
 
 echo "== type mismatch =="
 check "GET non-numeric id"    400 "$API/abc"

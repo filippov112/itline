@@ -25,6 +25,10 @@ public class Record {
     @Column(nullable = false, length = 2000)
     private String description;
 
+    @Version
+    @Column(nullable = false)
+    private long version;
+
     protected Record() { }
 
     public Record(boolean active, String icon, String name, String description) {
@@ -40,6 +44,7 @@ public class Record {
     public String getIcon() { return icon; }
     public String getName() { return name; }
     public String getDescription() { return description; }
+    public long getVersion() { return version; }
 
     public void setActive(boolean active) { this.active = active; }
     public void setIcon(String icon) { this.icon = icon; }

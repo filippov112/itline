@@ -42,18 +42,29 @@ public class RecordService {
     public Record update(Long id, UpdateRecordRequest req) {
         Record r = repo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Запись " + id + " не найдена"));
+
+        // Быстрая проверка: клиент прислал устаревшую версию.
+        if (r.getVersion() != req.version()) {
+            throw new ConflictException("Версия устарела: ожидалась " + r.getVersion());
+        }
         r.setActive(req.active());
         r.setIcon(req.icon());
         r.setName(req.name());
         r.setDescription(req.description());
         // save() НЕ нужен: dirty checking сделает UPDATE при коммите.
+        // при реальной гонке Hibernate бросит OptimisticLockingFailureException, его перехватит advice.
         return r;
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Long version) {
         Record r = repo.findById(id)
                 .orElseThrow(() -> new NotFoundException("Запись " + id + " не найдена"));
+        if (r.getVersion() != version) {
+            throw new ConflictException("Версия устарела: ожидалась " + r.getVersion());
+        }
+        // Для DELETE optimistic locking тоже работает: Hibernate добавит
+        // version в WHERE. Если строк 0 — исключение -> 409.
         repo.delete(r);
     }
 }

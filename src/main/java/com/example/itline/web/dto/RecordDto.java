@@ -10,12 +10,13 @@ public record RecordDto(
         boolean active,
         String icon,
         String name,
-        String description
+        String description,
+        long version
 ) {
     public static RecordDto of(Record r) {
         return new RecordDto(
                 r.getId(), r.isActive(), r.getIcon(),
-                r.getName(), r.getDescription()
+                r.getName(), r.getDescription(), r.getVersion()
         );
     }
 }

@@ -58,10 +58,13 @@ public class RecordController {
 
     /**
      * DELETE /api/records/{id}
+     * version передаём query-параметром, а не телом:
+     * DELETE с телом поддерживается не всеми прокси/клиентами.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") Long id) {
-        service.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id,
+                                       @RequestParam("version") Long version) {
+        service.delete(id, version);
         return ResponseEntity.noContent().build();
     }
 }

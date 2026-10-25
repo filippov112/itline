@@ -21,5 +21,6 @@ public record UpdateRecordRequest(
         @Pattern(regexp = "icon[123]", message = "Допустимо: icon1, icon2, icon3")
         String icon,
         @NotBlank @Size(max = 255) String name,
-        @NotBlank @Size(max = 2000) String description
+        @NotBlank @Size(max = 2000) String description,
+        @NotNull @PositiveOrZero Long version
 ) {}
