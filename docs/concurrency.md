@@ -8,3 +8,7 @@
 Причина: `UPDATE records SET name = ? WHERE id = ?` не проверяет,
 что данные не изменились с момента чтения. Уровень изоляции
 READ COMMITTED (Postgres по умолчанию) это допускает.
+
+**Решение**: optimistic locking через @Version.
+`UPDATE ... WHERE id = ? AND version = ?` обновит 0 строк,
+если кто-то успел раньше -> OptimisticLockingFailureException -> 409.

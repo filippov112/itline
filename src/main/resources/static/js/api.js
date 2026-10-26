@@ -85,18 +85,18 @@ export async function createRecord(payload) {
 /**
  * Обновление
  */
-export async function updateRecord(id, payload) {
+export async function updateRecord(id, payload, version) {
     return request(`${BASE}/${id}`, {
         method: "PUT",
-        body: { ...payload, },
+        body: { ...payload, version },
     });
 }
 
 /**
  * Удаление
  */
-export async function deleteRecord(id) {
-    return request(`${BASE}/${id}`, {
+export async function deleteRecord(id, version) {
+    return request(`${BASE}/${id}?version=${encodeURIComponent(version)}`, {
         method: "DELETE",
     });
 }

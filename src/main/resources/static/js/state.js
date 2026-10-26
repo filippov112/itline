@@ -107,6 +107,7 @@ export async function toggleActive(record) {
                 name: record.name,
                 description: record.description,
             },
+            record.version,
         );
         replaceRecord(updated);
         state.lastError = null;
@@ -127,7 +128,7 @@ export async function removeSelected() {
     if (!rec) return { ok: false, error: null };
 
     try {
-        await api.deleteRecord(rec.id);
+        await api.deleteRecord(rec.id, rec.version);
         state.records = state.records.filter(r => r.id !== rec.id);
         state.selectedId = null;
         state.lastError = null;

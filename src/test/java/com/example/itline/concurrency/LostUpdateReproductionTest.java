@@ -25,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+import org.junit.jupiter.api.Disabled;
+
 @SpringBootTest
 @Testcontainers
 class LostUpdateReproductionTest {
@@ -44,7 +46,9 @@ class LostUpdateReproductionTest {
     @Autowired RecordRepository repo;
     @Autowired TransactionTemplate tx;
 
+
     @Test
+    @Disabled("воспроизведение без @Version")
     void lostUpdate_withoutVersioning() throws Exception {
         Record initial = repo.save(new Record(false, "icon1", "Исходное", "desc"));
         Long id = initial.getId();
